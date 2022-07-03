@@ -2,14 +2,15 @@ import json
 import time
 import requests
 from requests.cookies import cookiejar_from_dict
+from datetime import datetime
 
 
 class Bot:
     def __init__(self):
-        self.gift = ['DGBJKI-A900EO5SQ-000', 'DGBJG9-A900B51O4-000']
+        # self.gift = ['DGBJKI-A900EO5SQ-000', 'DGBJG9-A900B51O4-000']
         self.rs = 'DGBJG9'
-        self.pure_id = 'DGBJG9-A900EO5UE'
-        self.id = 'DGBJG9-A900EO5UE-000'
+        self.pure_id = 'DGBJG9-A900B51SS'
+        self.id = 'DGBJG9-A900B51SS-000'
         self.session = requests.session()
         self.session.headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -29,7 +30,6 @@ class Bot:
         self.session.cookies = cookiejar_from_dict(cookie)
 
     def get_cart_information(self):
-        print(time.time())
         url = 'https://24h.pchome.com.tw/prod/cart/v1/prod/' + self.id + '/snapup?_=' + str(int(time.time()*1000))
         print(url)
         response = self.session.get(url)
@@ -42,7 +42,7 @@ class Bot:
 
     def add_cart(self):
         # G is gift list
-        gift = '"' + self.gift[0] + '","' + self.gift[1] + '"'
+        # gift = '"' + self.gift[0] + '","' + self.gift[1] + '"'
         payload = {
             'data': '{"G":[''],"A":[],"B":[],"TB":"24H","TP":2,"T":"ADD","TI":"' + self.id + '","RS":"' + self.rs + '","YTQ":1,"CAX":"' + self.mac + '","CAXE":"' + self.mac_expire + '"}'
         }
@@ -53,12 +53,7 @@ class Bot:
         if response["PRODTOTAL"] == 0:
             print('Add cart failed!')
             return False
-
-    def get_pk(self):
-        payload = {'JSON': 'true'}
-        url = 'https://ecssl.pchome.com.tw/sys/cflow/fsapi/getPK'
-        response = self.session.post(url)
-        print(response.text)
+        return True
 
     def send_order(self):
         with open('data\\pchome\\pchome.json', 'r') as fd:
@@ -68,13 +63,23 @@ class Bot:
             'CouponInfo': '{"actData":[],"prodCouponData":[]}'
         }
         url = 'https://ecssl.pchome.com.tw/sys/cflow/fsapi/BigCar/BIGCAR/OrderSubmit'
-        self.session.post(url)
+        self.session.post(url, payload)
 
 
-if __name__ == '__main__':
+def main():
     bot = Bot()
     while True:
         bot.get_cart_information()
         if bot.add_cart() is True:
             break
         time.sleep(0.2)
+    print('[+] Success: https://ecssl.pchome.com.tw/sys/cflow/fsindex/BigCar/BIGCAR/ItemList')
+
+
+if __name__ == '__main__':
+    purchase_date = datetime(2022, 7, 10, 11, 59, 50).timestamp()
+    if datetime.now().timestamp() >= purchase_date:
+        print('Start')
+        main()
+    else:
+        print('Not yet')

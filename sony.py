@@ -1,3 +1,4 @@
+from tkinter import messagebox
 from requests.cookies import cookiejar_from_dict
 import requests
 import re
@@ -7,7 +8,7 @@ import time
 
 class Bot:
     def __init__(self, url):
-        with open('setting.json', 'r') as fd:
+        with open('data\\sony\\cookie.json', 'r') as fd:
             cookie = json.load(fd)
         self.session = requests.session()
         self.session.headers = {
@@ -27,6 +28,12 @@ class Bot:
         self.url = url
 
     def get_request(self, url):
+        # while True:
+        #     response = self.session.get(url)
+        #     if response.ok:
+        #         return response
+        #     time.sleep(1)
+
         while True:
             try:
                 response = self.session.get(url)
@@ -44,7 +51,16 @@ class Bot:
             else:
                 return response
 
+        #response = self.session.get(url)
+        #return response
+
     def post_request(self, url, data):
+        # while True:
+        #     response = self.session.post(url, data)
+        #     if response.ok:
+        #         return response
+        #     time.sleep(1)
+
         while True:
             try:
                 response = self.session.post(url, data)
@@ -61,6 +77,9 @@ class Bot:
                 return None
             else:
                 return response
+
+        #response = self.session.post(url, data)
+        #return response
 
     def get_item_information(self):
         item_pattern = re.compile(R"data-pid=\"([0-9a-zA-Z]+)\"")
@@ -97,7 +116,7 @@ class Bot:
                 return re.search(item_pattern, line).group(1)
 
     def save_bucket(self):
-        with open('user_information.json', 'r', encoding='utf-8') as fd:
+        with open('data\\sony\\user_information.json', 'r', encoding='utf-8') as fd:
             user_information = json.load(fd)
         url = 'https://store.sony.com.tw/shopping/saveBasket'
         response = self.post_request(url, user_information)
@@ -138,40 +157,6 @@ class Bot:
                 if value_pattern.search(line):
                     self. url_enc = value_pattern.search(line).group(1)
                     print('[+] URLENC: ', value_pattern.search(line).group(1))
-    '''
-    def solve(self):
-        from selenium import webdriver
-        with open('api_key', 'r') as fd:
-            api_key = fd.read()
-        url = 'https://2captcha.com/in.php'
-        payload = {
-            "method": "userrecaptcha",
-            "googlekey": self.key,
-            "key": api_key,
-            "pageurl": 'https://store.sony.com.tw/shopping/previewOrder',
-            "json": 1
-        }
-        response = requests.post(url, data=payload)
-        request_id = response.json()['request']
-    
-        driver = webdriver.Chrome(executable_path='chromedriver.exe')
-        driver.add_cookie(self.session.cookies)
-        driver.get('https://store.sony.com.tw/shopping/previewOrder')
-    
-        url = f"https://2captcha.com/res.php?key={api_key}&action=get&id={request_id}&json=1"
-    
-        while True:
-            res = requests.get(url)
-            if res.json()['status'] == 0:
-                print(res.text)
-                time.sleep(3)
-            else:
-                request = res.json()['request']
-                js = f'document.getElementById("g-recaptcha-response").innerHTML="{request}";'
-                driver.execute_script(js)
-                driver.find_element_by_id("g-recaptcha-box").submit()
-                break
-    '''
 
     def auth(self):
         url = 'https://epos.ctbcbank.com/auth/SSLAuthUI.jsp'
@@ -199,11 +184,23 @@ class Bot:
         self.save_bucket()
         print('Now you should pass reCapture test yourself: https://store.sony.com.tw/shopping/previewOrder')
 
+    def pop_up_info(self):
+        cartID = self.get_item_information()
+        while not cartID:
+            print('retry')
+            time.sleep(60)
+            cartID = self.get_item_information()
+
+        messagebox.showinfo(title="Greetings", message="Hello World!")
+
 
 if __name__ == '__main__':
     bot = Bot('https://store.sony.com.tw/product/show/ff8080817e29d7dd017e2ece92b402ac')
+    # bot.pop_up_info()
     bot.run()
     captcha_response = ''
     bot.save_bucket()
     bot.finish_order(captcha_response)
+
+
 
